@@ -75,3 +75,4 @@ For later Docker/Kubernetes weeks, configure MongoDB networking and secrets for 
 ## Notes
 - `app.py` enables Flask debug mode for local learning only. Do not use debug mode in a public deployment.
 - Click tracking counts requests that reach the short-link redirect route, including repeat visits.
+#case study
