@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkLite — Create account</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="site-header">
+        <a class="brand" href="{{ url_for('index') }}" aria-label="LinkLite home">
+            <span class="brand-mark" aria-hidden="true">↗</span>
+            <span>LinkLite</span>
+        </a>
+        <div class="header-actions">
+            <a class="login-link" href="{{ url_for('login') }}">Log in</a>
+            <a class="header-button" href="{{ url_for('signup') }}">Create account</a>
+        </div>
+    </header>
+
+    <main class="page-shell auth-shell">
+        <section class="auth-card" aria-label="Sign up page">
+            <h2>Create your account</h2>
+            <p>Unlock premium features like custom links, analytics, and team tools.</p>
+
+            <form class="auth-form" method="POST" action="{{ url_for('signup') }}">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="name@example.com" required>
+
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Choose a username" required>
+
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Create a password" required>
+
+                <label for="domain">Domain</label>
+                <input type="text" id="domain" name="domain" placeholder="example.com" required>
+
+                <button type="submit" class="premium-button auth-submit">Start using LinkLite</button>
+            </form>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    <div class="message {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endwith %}
+        </section>
+    </main>
+</body>
+</html>

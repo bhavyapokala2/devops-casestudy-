@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#635bff">
+    <title>LinkLite — Make every link lighter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="site-header">
+        <a class="brand" href="{{ url_for('index') }}" aria-label="LinkLite home">
+            <span class="brand-mark" aria-hidden="true">↗</span>
+            <span>LinkLite</span>
+        </a>
+        <div class="header-actions">
+            <a class="login-link" href="{{ url_for('login') }}">Log in</a>
+            <a class="header-button" href="{{ url_for('signup') }}">Create account</a>
+        </div>
+        <span class="header-note"><span class="status-dot"></span> Simple links. Smarter sharing.</span>
+    </header>
+
+    <main class="page-shell">
+        <section class="hero-card">
+            <div class="eyebrow"><span class="sparkle">✦</span> YOUR LINK, SIMPLIFIED</div>
+            <h1>Long links are a thing<br class="desktop-break"> of the <span>past.</span></h1>
+            <p class="hero-description">Shorten your links and make them cleaner, faster, and easier to share everywhere.</p>
+
+            <form class="shorten-form" method="POST" action="{{ url_for('index') }}" novalidate>
+                <label for="original_url">Paste your destination URL</label>
+                <div class="url-input-wrap">
+                    <span class="input-icon" aria-hidden="true">↗</span>
+                    <input type="url" id="original_url" name="original_url"
+                           placeholder="https://example.com/your-long-link"
+                           autocomplete="url" inputmode="url" required
+                           aria-describedby="url-help">
+                    <button type="submit" class="primary-button">Shorten link <span aria-hidden="true">→</span></button>
+                </div>
+                <p class="input-help" id="url-help">Use a complete URL starting with http:// or https://.</p>
+            </form>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    <div class="message {{ category }}" role="status">{{ message }}</div>
+                {% endfor %}
+            {% endwith %}
+
+            {% if short_url %}
+            <section class="result-panel" aria-label="Your shortened link">
+                <div class="result-icon" aria-hidden="true">✓</div>
+                <div class="result-content">
+                    <span class="result-label">YOUR SHORT LINK IS READY</span>
+                    <a id="short-link" class="result-link" href="{{ short_url }}" target="_blank" rel="noopener noreferrer">{{ short_url }}</a>
+                </div>
+                <button type="button" class="copy-button" data-copy="{{ short_url }}" aria-label="Copy your short link">▢ <span>Copy</span></button>
+            </section>
+            <p class="copy-feedback" id="copy-feedback" aria-live="polite"></p>
+            {% endif %}
+        </section>
+
+        <section class="links-section">
+            <div class="section-heading">
+                <div>
+                    <p class="section-kicker">YOUR ACTIVITY</p>
+                    <h2>Recent links</h2>
+                </div>
+                <span class="count-pill">{{ all_urls|length }} of 10 shown</span>
+            </div>
+
+            {% if all_urls %}
+                <div class="links-list">
+                {% for item in all_urls %}
+                    <article class="link-card">
+                        <div class="link-symbol" aria-hidden="true">↗</div>
+                        <div class="link-info">
+                            <a class="short-link" href="{{ url_for('redirect_url', code=item.short_code) }}" target="_blank" rel="noopener noreferrer">
+                                {{ request.host_url }}{{ item.short_code }}
+                            </a>
+                            <p class="original-url" title="{{ item.original_url }}">{{ item.original_url }}</p>
+                        </div>
+                        <div class="link-actions">
+                            <div class="click-count"><strong>{{ item.clicks|default(0) }}</strong><span>clicks</span></div>
+                            <button type="button" class="icon-copy-button" data-copy="{{ request.host_url }}{{ item.short_code }}" aria-label="Copy link {{ item.short_code }}" title="Copy short link">▢</button>
+                        </div>
+                    </article>
+                {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon" aria-hidden="true">↗</div>
+                    <h3>Your links will live here</h3>
+                    <p>Shorten your first URL above to start tracking clicks.</p>
+                </div>
+            {% endif %}
+            <p class="copy-feedback list-feedback" id="list-copy-feedback" aria-live="polite"></p>
+        </section>
+
+        <section class="feature-strip" aria-label="LinkLite features">
+            <div><span class="feature-icon">↗</span><span><strong>Short & shareable</strong><small>Clean links for anywhere</small></span></div>
+            <div><span class="feature-icon">▣</span><span><strong>Click tracking</strong><small>See visits per short link</small></span></div>
+            <div><span class="feature-icon">✓</span><span><strong>URL validation</strong><small>Catch invalid links early</small></span></div>
+        </section>
+
+    </main>
+
+    <footer>Made for easier sharing <span>·</span> Built with Flask & MongoDB</footer>
+
+    <script>
+        async function copyText(text, feedbackElement) {
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                } else {
+                    const temporaryInput = document.createElement("textarea");
+                    temporaryInput.value = text;
+                    temporaryInput.setAttribute("readonly", "");
+                    temporaryInput.style.position = "absolute";
+                    temporaryInput.style.left = "-9999px";
+                    document.body.appendChild(temporaryInput);
+                    temporaryInput.select();
+                    const copied = document.execCommand("copy");
+                    temporaryInput.remove();
+                    if (!copied) throw new Error("Copy command failed");
+                }
+                feedbackElement.textContent = "Link copied to clipboard!";
+                feedbackElement.classList.add("visible");
+            } catch (error) {
+                feedbackElement.textContent = "Copy was blocked. Select and copy the link manually.";
+                feedbackElement.classList.add("visible");
+            }
+        }
+
+        document.querySelectorAll("[data-copy]").forEach((button) => {
+            button.addEventListener("click", () => {
+                const isListButton = button.classList.contains("icon-copy-button");
+                const feedback = document.getElementById(isListButton ? "list-copy-feedback" : "copy-feedback");
+                copyText(button.dataset.copy, feedback);
+                if (!isListButton) {
+                    button.querySelector("span").textContent = "Copy";
+                }
+            });
+        });
+    </script>
+</body>
+</html>
