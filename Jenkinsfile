@@ -15,7 +15,6 @@ pipeline {
         stage('Push Docker Image to Docker Hub') {
             steps {
                 echo "push Docker Image to Docker Hub"
-                bat "docker tag bhavyasrip/url-shortener:latest bhavyasrip/url-shortener:latest"
                 bat "docker push bhavyasrip/url-shortener:latest"
             }
         }
