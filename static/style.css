@@ -53,7 +53,14 @@ a { transition: opacity 0.2s ease, transform 0.2s ease; }
     padding: 8px 12px; border: 1px solid rgba(99, 91, 255, 0.12); border-radius: 999px; background: rgba(255,255,255,0.5);
 }
 .header-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+.welcome-user {
+    color: var(--ink); font-weight: 700; font-size: 13px; white-space: nowrap;
+}
 .login-link { color: var(--ink); text-decoration: none; font-weight: 700; font-size: 13px; }
+.secondary-header-button {
+    background: rgba(99, 91, 255, 0.08); color: var(--purple); border: 1px solid rgba(99, 91, 255, 0.12);
+    box-shadow: none;
+}
 .header-button, .premium-button, .secondary-button {
     display: inline-flex; align-items: center; justify-content: center; border-radius: 12px;
     font-weight: 700; text-decoration: none; transition: transform .2s, box-shadow .2s;

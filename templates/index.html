@@ -14,8 +14,13 @@
             <span>LinkLite</span>
         </a>
         <div class="header-actions">
-            <a class="login-link" href="{{ url_for('login') }}">Log in</a>
-            <a class="header-button" href="{{ url_for('signup') }}">Create account</a>
+            {% if session.get('user_id') %}
+                <span class="welcome-user">Hello, {{ session.get('username', 'User') }}</span>
+                <a class="header-button secondary-header-button" href="{{ url_for('logout') }}">Logout</a>
+            {% else %}
+                <a class="login-link" href="{{ url_for('login') }}">Log in</a>
+                <a class="header-button" href="{{ url_for('signup') }}">Create account</a>
+            {% endif %}
         </div>
         <span class="header-note"><span class="status-dot"></span> Simple links. Smarter sharing.</span>
     </header>
@@ -97,7 +102,7 @@
                     <p class="section-kicker">YOUR ACTIVITY</p>
                     <h2>Recent links</h2>
                 </div>
-                <span class="count-pill">{{ all_urls|length }} of 10 shown</span>
+                <span class="count-pill">{{ user_url_count }} urls created</span>
             </div>
 
             {% if all_urls %}

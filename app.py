@@ -1,5 +1,6 @@
 import os
 import secrets
+from functools import wraps
 from urllib.parse import urlparse
 
 from dotenv import load_dotenv
@@ -51,8 +52,21 @@ def generate_short_code():
             return code
 
 
+def login_required(view):
+    @wraps(view)
+    def wrapped_view(*args, **kwargs):
+        if not session.get("user_id"):
+            flash("Please log in to access your dashboard.", "error")
+            return redirect(url_for("login"))
+        return view(*args, **kwargs)
+    return wrapped_view
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    if session.get("user_id"):
+        return redirect(url_for("index"))
+
     if request.method == "POST":
         email_or_username = request.form.get("email_or_username", "").strip()
         password = request.form.get("password", "")
@@ -115,15 +129,24 @@ def signup():
             flash("Could not save your account. Please try again later.", "error")
             return render_template("signup.html")
 
-        flash("Your account has been created successfully.", "success")
-        return redirect(url_for("index"))
+        flash("Your account has been created successfully. Please log in.", "success")
+        return redirect(url_for("login"))
 
     return render_template("signup.html")
 
 
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("You have been logged out.", "success")
+    return redirect(url_for("login"))
+
+
 @app.route("/", methods=["GET", "POST"])
+@login_required
 def index():
     short_url = None
+    user_id = session.get("user_id")
 
     if request.method == "POST":
         original_url = request.form.get("original_url", "").strip()
@@ -137,6 +160,7 @@ def index():
                     "short_code": code,
                     "original_url": original_url,
                     "clicks": 0,
+                    "created_by": user_id,
                 })
                 short_url = url_for("redirect_url", code=code, _external=True)
                 flash("Your short link is ready to share!", "success")
@@ -144,12 +168,14 @@ def index():
                 flash("Database error. Check that MongoDB is running and your connection settings are correct.", "error")
 
     try:
-        all_urls = list(urls.find().sort("_id", -1).limit(10))
+        all_urls = list(urls.find({"created_by": user_id}).sort("_id", -1).limit(10))
+        user_url_count = len(all_urls)
     except PyMongoError:
         all_urls = []
+        user_url_count = 0
         flash("Could not load recent links. Check your MongoDB connection.", "error")
 
-    return render_template("index.html", short_url=short_url, all_urls=all_urls)
+    return render_template("index.html", short_url=short_url, all_urls=all_urls, user_url_count=user_url_count)
 
 
 @app.route("/<code>")

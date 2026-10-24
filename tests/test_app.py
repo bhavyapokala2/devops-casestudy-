@@ -30,14 +30,43 @@ class URLShortenerTests(unittest.TestCase):
         self.find_mock.return_value = cursor
         self.find_one_mock.return_value = None
 
+    def login_user(self):
+        with self.client.session_transaction() as session:
+            session["user_id"] = "user-123"
+            session["username"] = "testuser"
+
     def tearDown(self):
         for p in reversed(self.patches):
             p.stop()
 
-    def test_home_page_loads(self):
+    def test_home_page_requires_login(self):
+        response = self.client.get("/", follow_redirects=False)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers["Location"], "/login")
+
+    def test_home_page_loads_for_logged_in_user(self):
+        self.login_user()
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Shorten your links", response.data)
+
+    def test_user_sees_how_many_urls_they_created(self):
+        self.login_user()
+        cursor = MagicMock()
+        cursor.sort.return_value.limit.return_value = [
+            {"short_code": "abc123", "original_url": "https://example.com", "clicks": 2},
+            {"short_code": "def456", "original_url": "https://example.org", "clicks": 1},
+        ]
+        self.find_mock.return_value = cursor
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"2 urls created", response.data)
+
+    def test_logout_ends_session(self):
+        self.login_user()
+        response = self.client.get("/logout", follow_redirects=False)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers["Location"], "/login")
 
     def test_valid_url_is_accepted(self):
         self.assertTrue(url_app.is_valid_url("https://www.example.com/page"))
@@ -46,6 +75,7 @@ class URLShortenerTests(unittest.TestCase):
         self.assertFalse(url_app.is_valid_url("not-a-url"))
 
     def test_short_url_is_created(self):
+        self.login_user()
         with patch.object(url_app, "generate_short_code", return_value="abc123"):
             response = self.client.post(
                 "/",
@@ -59,9 +89,11 @@ class URLShortenerTests(unittest.TestCase):
         self.assertEqual(saved["short_code"], "abc123")
         self.assertEqual(saved["original_url"], "https://www.example.com")
         self.assertEqual(saved["clicks"], 0)
+        self.assertEqual(saved["created_by"], "user-123")
         self.assertIn(b"abc123", response.data)
 
     def test_invalid_url_is_not_saved(self):
+        self.login_user()
         response = self.client.post(
             "/",
             data={"original_url": "not-a-url"},
