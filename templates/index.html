@@ -58,7 +58,10 @@
                         <span class="result-label">YOUR SHORT LINK IS READY</span>
                         <a id="short-link" class="result-link" href="{{ short_url }}" target="_blank" rel="noopener noreferrer">{{ short_url }}</a>
                     </div>
-                    <button type="button" class="copy-button" data-copy="{{ short_url }}" aria-label="Copy your short link">▢ <span>Copy</span></button>
+                    <div class="result-actions">
+                        <button type="button" class="share-button" data-share="{{ short_url }}" aria-label="Share your short link">Share</button>
+                        <button type="button" class="copy-button" data-copy="{{ short_url }}" aria-label="Copy your short link">▢ <span>Copy</span></button>
+                    </div>
                 </section>
                 <p class="copy-feedback" id="copy-feedback" aria-live="polite"></p>
                 {% endif %}
@@ -175,6 +178,37 @@
                 copyText(button.dataset.copy, feedback);
                 if (!isListButton) {
                     button.querySelector("span").textContent = "Copy";
+                }
+            });
+        });
+
+        document.querySelectorAll("[data-share]").forEach((button) => {
+            button.addEventListener("click", async () => {
+                const url = button.dataset.share;
+                const feedback = document.getElementById("copy-feedback");
+
+                try {
+                    if (navigator.share) {
+                        await navigator.share({
+                            title: "LinkLite short link",
+                            text: "Check out this link:",
+                            url: url
+                        });
+                        feedback.textContent = "Share dialog opened successfully.";
+                        feedback.classList.add("visible");
+                        return;
+                    }
+
+                    if (navigator.clipboard && window.isSecureContext) {
+                        await navigator.clipboard.writeText(url);
+                        feedback.textContent = "Link copied and ready to share.";
+                    } else {
+                        throw new Error("Clipboard unavailable");
+                    }
+                    feedback.classList.add("visible");
+                } catch (error) {
+                    feedback.textContent = "Sharing is not available here. Copy the link manually and send it.";
+                    feedback.classList.add("visible");
                 }
             });
         });
