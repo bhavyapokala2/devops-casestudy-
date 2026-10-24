@@ -22,40 +22,73 @@
 
     <main class="page-shell">
         <section class="hero-card">
-            <div class="eyebrow"><span class="sparkle">✦</span> YOUR LINK, SIMPLIFIED</div>
-            <h1>Long links are a thing<br class="desktop-break"> of the <span>past.</span></h1>
-            <p class="hero-description">Shorten your links and make them cleaner, faster, and easier to share everywhere.</p>
+            <div class="hero-content">
+                <div class="eyebrow"><span class="sparkle">✦</span> YOUR LINK, SIMPLIFIED</div>
+                <h1>Long links are a thing<br class="desktop-break"> of the <span>past.</span></h1>
+                <p class="hero-description">Shorten your links and make them cleaner, faster, and easier to share everywhere.</p>
 
-            <form class="shorten-form" method="POST" action="{{ url_for('index') }}" novalidate>
-                <label for="original_url">Paste your destination URL</label>
-                <div class="url-input-wrap">
-                    <span class="input-icon" aria-hidden="true">↗</span>
-                    <input type="url" id="original_url" name="original_url"
-                           placeholder="https://example.com/your-long-link"
-                           autocomplete="url" inputmode="url" required
-                           aria-describedby="url-help">
-                    <button type="submit" class="primary-button">Shorten link <span aria-hidden="true">→</span></button>
+                <form class="shorten-form" method="POST" action="{{ url_for('index') }}" novalidate>
+                    <label for="original_url">Paste your destination URL</label>
+                    <div class="url-input-wrap">
+                        <span class="input-icon" aria-hidden="true">↗</span>
+                        <input type="url" id="original_url" name="original_url"
+                               placeholder="https://example.com/your-long-link"
+                               autocomplete="url" inputmode="url" required
+                               aria-describedby="url-help">
+                        <button type="submit" class="primary-button">Shorten link <span aria-hidden="true">→</span></button>
+                    </div>
+                    <p class="input-help" id="url-help">Use a complete URL starting with http:// or https://.</p>
+                </form>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% for category, message in messages %}
+                        <div class="message {{ category }}" role="status">{{ message }}</div>
+                    {% endfor %}
+                {% endwith %}
+
+                {% if short_url %}
+                <section class="result-panel" aria-label="Your shortened link">
+                    <div class="result-icon" aria-hidden="true">✓</div>
+                    <div class="result-content">
+                        <span class="result-label">YOUR SHORT LINK IS READY</span>
+                        <a id="short-link" class="result-link" href="{{ short_url }}" target="_blank" rel="noopener noreferrer">{{ short_url }}</a>
+                    </div>
+                    <button type="button" class="copy-button" data-copy="{{ short_url }}" aria-label="Copy your short link">▢ <span>Copy</span></button>
+                </section>
+                <p class="copy-feedback" id="copy-feedback" aria-live="polite"></p>
+                {% endif %}
+            </div>
+
+            <aside class="hero-preview" aria-label="LinkLite dashboard preview">
+                <div class="preview-card">
+                    <div class="preview-header">
+                        <span class="mini-label">LIVE SUMMARY</span>
+                        <span class="mini-status">+18.2%</span>
+                    </div>
+                    <div class="stat-grid">
+                        <div>
+                            <strong>12.4k</strong>
+                            <small>links</small>
+                        </div>
+                        <div>
+                            <strong>4.8k</strong>
+                            <small>clicks</small>
+                        </div>
+                    </div>
+                    <div class="mini-link-row">
+                        <span class="mini-link-mark">↗</span>
+                        <span>linklite.app/ab12cd</span>
+                    </div>
+                    <div class="bar-chart" aria-hidden="true">
+                        <span style="height: 28%"></span>
+                        <span style="height: 44%"></span>
+                        <span style="height: 72%"></span>
+                        <span style="height: 58%"></span>
+                        <span style="height: 84%"></span>
+                        <span style="height: 96%"></span>
+                    </div>
                 </div>
-                <p class="input-help" id="url-help">Use a complete URL starting with http:// or https://.</p>
-            </form>
-
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% for category, message in messages %}
-                    <div class="message {{ category }}" role="status">{{ message }}</div>
-                {% endfor %}
-            {% endwith %}
-
-            {% if short_url %}
-            <section class="result-panel" aria-label="Your shortened link">
-                <div class="result-icon" aria-hidden="true">✓</div>
-                <div class="result-content">
-                    <span class="result-label">YOUR SHORT LINK IS READY</span>
-                    <a id="short-link" class="result-link" href="{{ short_url }}" target="_blank" rel="noopener noreferrer">{{ short_url }}</a>
-                </div>
-                <button type="button" class="copy-button" data-copy="{{ short_url }}" aria-label="Copy your short link">▢ <span>Copy</span></button>
-            </section>
-            <p class="copy-feedback" id="copy-feedback" aria-live="polite"></p>
-            {% endif %}
+            </aside>
         </section>
 
         <section class="links-section">

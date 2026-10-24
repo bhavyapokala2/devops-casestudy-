@@ -15,7 +15,9 @@ pipeline {
         stage('Push Docker Image to Docker Hub') {
             steps {
                 echo "push Docker Image to Docker Hub"
-                bat "docker push bhavyasrip/url-shortener:latest"
+                bat "docker tag kubdemoapp:v1 bhavyasrip/url-shortener:latest"
+                bat "docker push bhavyasrip/url-shortener:v1"
+                    
             }
         }
         stage('Deploy to Kubernetes') {
